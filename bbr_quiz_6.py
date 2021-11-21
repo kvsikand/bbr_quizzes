@@ -103,10 +103,10 @@ for t in np.arange(0, T, 0.1):
   # HOW TO DO THIS: (Equation 6.3, but that's just for a 2 joint system...)
   q_s, q_e, q_h = current_q_min_kinetic_energy
   H_11 = I_s + m_s * pow(dist_s, 2) + I_e + m_e * (pow(l_s, 2) + pow(dist_e, 2) + 2 *l_s * dist_e * np.cos(q_e)) + \
-    I_h + m_h * (pow(l_s, 2) + pow(l_e, 2) + pow(dist_h, 2) + 2 *l_s * l_e * np.cos(q_e) + 2 *l_s * dist_h * np.cos(q_h) + 2 *l_s * dist_h * np.cos(q_e + q_h))
+    I_h + m_h * (pow(l_s, 2) + pow(l_e, 2) + pow(dist_h, 2) + 2 *l_s * l_e * np.cos(q_e) + 2 *l_e * dist_h * np.cos(q_h) + 2 *l_s * dist_h * np.cos(q_e + q_h))
   
   H_12 = I_e + m_e * (pow(dist_e, 2) + l_s * dist_e * np.cos(q_e)) + I_h + \
-    m_h * (pow(l_e, 2) + pow(dist_h, 2) + 2 *l_s * l_e * np.cos(q_e)) + 2 * l_e * dist_h * np.cos(q_h) + l_s * dist_h * np.cos(q_e + q_h)
+    m_h * (pow(l_e, 2) + pow(dist_h, 2) + l_s * l_e * np.cos(q_e)) + 2 * l_e * dist_h * np.cos(q_h) + l_s * dist_h * np.cos(q_e + q_h)
   
   H_13 = I_h + m_h * (pow(dist_h, 2) + l_e * dist_h * np.cos(q_h)) + l_s * dist_h * np.cos(q_e + q_h)
 
@@ -127,7 +127,7 @@ for t in np.arange(0, T, 0.1):
   H[2, 0] = H_13
   H[2, 2] = H_33
 
-  J_H_cross = np.linalg.inv(H) @ jacobian.transpose() @ np.linalg.inv(jacobian @ H @ jacobian.transpose())
+  J_H_cross = np.linalg.inv(H) @ jacobian.transpose() @ np.linalg.inv(jacobian @ np.linalg.inv(H) @ jacobian.transpose())
   q_h_star = J_H_cross @ x_dot
   current_q_min_kinetic_energy += q_h_star
   qs_min_kinetic_energy.append(current_q_min_kinetic_energy.copy())
@@ -159,10 +159,9 @@ for config in qs_min_kinetic_energy:
   plt.gca().plot((0, l_s * c_s), (0, l_s * s_s), 'g-', lw=2)
   plt.gca().plot((l_s * c_s, l_s * c_s + l_e * c_se), (l_s * s_s, l_s * s_s + l_e * s_se), 'g-', lw=2)
   green_line, = plt.gca().plot((l_s * c_s + l_e * c_se, l_s * c_s + l_e * c_se + l_h * c_seh), (l_s * s_s + l_e * s_se, l_s * s_s + l_e * s_se + l_h * s_seh), 'g-', lw=2)
-plt.title('Minimum extreme joint angles')
 plt.xlabel('x')
 plt.ylabel('y')
-plt.legend([red_line, green_line], ['Minimum joint velocity', 'Minimum joint Exteremes'])
+plt.legend([red_line, green_line], ['Minimum joint velocity', 'Minimum kinetic energy'])
 
 plt.savefig('fig_6c_6d.png')
 
