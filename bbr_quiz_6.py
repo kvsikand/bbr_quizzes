@@ -101,13 +101,36 @@ for t in np.arange(0, T, 0.1):
   # Min kinetic energy version
   # define mass matrices
   # HOW TO DO THIS: (Equation 6.3, but that's just for a 2 joint system...)
-  H_sss = I_s + I_e + I_h + m_s * dist_h**2 + m_e 8 (l_s**2 + dist_e**2 + 2 * l_s * dist_e * c_e)
+  q_s, q_e, q_h = current_q_min_kinetic_energy
+  H_11 = I_s + m_s * pow(dist_s, 2) + I_e + m_e * (pow(l_s, 2) + pow(dist_e, 2) + 2 *l_s * dist_e * np.cos(q_e)) + \
+    I_h + m_h * (pow(l_s, 2) + pow(l_e, 2) + pow(dist_h, 2) + 2 *l_s * l_e * np.cos(q_e) + 2 *l_s * dist_h * np.cos(q_h) + 2 *l_s * dist_h * np.cos(q_e + q_h))
+  
+  H_12 = I_e + m_e * (pow(dist_e, 2) + l_s * dist_e * np.cos(q_e)) + I_h + \
+    m_h * (pow(l_e, 2) + pow(dist_h, 2) + 2 *l_s * l_e * np.cos(q_e)) + 2 * l_e * dist_h * np.cos(q_h) + l_s * dist_h * np.cos(q_e + q_h)
+  
+  H_13 = I_h + m_h * (pow(dist_h, 2) + l_e * dist_h * np.cos(q_h)) + l_s * dist_h * np.cos(q_e + q_h)
 
-  jacobian_mass = jacobian.transpose @ H @ jacobian
-  J_H_cross = np.linalg.pinv(jacobian_mass)
+  H_22 = I_e + m_e * pow(dist_e, 2) + I_h + m_h * (pow(l_e, 2) + pow(dist_h, 2) + 2 *l_e * dist_h * np.cos(q_h))
+
+  H_23 = I_h + m_h * (pow(dist_h, 2) + l_e * dist_h * np.cos(q_h))
+
+  H_33 = I_h + m_h * pow(dist_h, 2)
+
+  H = np.zeros((3, 3))
+  H[0, 0] = H_11
+  H[0, 1] = H_12
+  H[1, 0] = H_12
+  H[1, 1] = H_22
+  H[1, 2] = H_23
+  H[2, 1] = H_23
+  H[0, 2] = H_13
+  H[2, 0] = H_13
+  H[2, 2] = H_33
+
+  J_H_cross = np.linalg.inv(H) @ jacobian.transpose() @ np.linalg.inv(jacobian @ H @ jacobian.transpose())
   q_h_star = J_H_cross @ x_dot
   current_q_min_kinetic_energy += q_h_star
-  current_q_min_kinetic_energy.append(current_q_min_kinetic_energy.copy())
+  qs_min_kinetic_energy.append(current_q_min_kinetic_energy.copy())
 
 
 target_trajectory = np.array(target_trajectory)
